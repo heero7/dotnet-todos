@@ -1,25 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using TodoWeb.API.Repository;
 
 namespace TodoWeb.API.Controllers;
-
-public interface ITodoService
-{
-    public void AddTodo(TodoRequest createTodoRequest);
-}
-
-public class TodoService(ITodoRepository todoRepository) : ITodoService
-{
-    public void AddTodo(TodoRequest createTodoRequest)
-    {
-        todoRepository.Create(new CreateTodo
-        {
-            Name = createTodoRequest.Name,
-            DueDate = createTodoRequest.DueDate,
-            Status = createTodoRequest.Status
-        });
-    }
-}
 
 [ApiController]
 [Route("api/[controller]")]
@@ -47,7 +28,7 @@ public class TodoController(ITodoService todoService) : ControllerBase
             return BadRequest("Guid was empty, that todo doesn't exist.");
         }
 
-        var todo = await todoRepository.GetById(id);
+        var todo = await todoService.GetById(id);
         var todoResponse = new TodoResponse
         {
             Id = todo.Id,
@@ -59,19 +40,19 @@ public class TodoController(ITodoService todoService) : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<TodoResponse>), StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<TodoResponse>> GetAll()
     {
-        var loadedTodos = todoRepository.GetAll();
-        var todos = loadedTodos as Todo[] ?? loadedTodos.ToArray();
-        if (todos.Length != 0)
+        var todos = todoService.GetAll();
+        var enumerable = todos as TodoResponse[] ?? todos.ToArray();
+        if (enumerable.Length != 0)
         {
-            var todoResponses = new TodoResponse[todos.Length];
-            for (var i = 0; i < todos.Length; i++)
+            var todoResponses = new TodoResponse[enumerable.Length];
+            for (var i = 0; i < enumerable.Length; i++)
             {
                 todoResponses[i] = new TodoResponse
                 {
-                    Id = todos[i].Id,
-                    Name = todos[i].Name,
-                    DueDate = todos[i].DueDate,
-                    Status = todos[i].Status
+                    Id = enumerable[i].Id,
+                    Name = enumerable[i].Name,
+                    DueDate = enumerable[i].DueDate,
+                    Status = enumerable[i].Status
                 };
             }
 

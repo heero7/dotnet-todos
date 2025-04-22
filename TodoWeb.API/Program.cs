@@ -16,6 +16,7 @@ builder.Services.AddSwaggerGen();
     // todo: this should be abstracted!
     // how can we abstract the details here, this is directly tied to Entity Framework
 builder.Services.AddDbContext<TodoContext>(opt => opt.UseInMemoryDatabase("TodoList"));
+builder.Services.AddScoped<ITodoService, TodoService>();
 builder.Services.AddScoped<ITodoRepository, TodoRepository>();
 builder.Services.AddScoped<ITodoPersistence, TodoContext>();
 
