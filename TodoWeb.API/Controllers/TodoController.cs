@@ -3,10 +3,29 @@ using TodoWeb.API.Repository;
 
 namespace TodoWeb.API.Controllers;
 
+public interface ITodoService
+{
+    public void AddTodo(TodoRequest createTodoRequest);
+}
+
+public class TodoService(ITodoRepository todoRepository) : ITodoService
+{
+    public void AddTodo(TodoRequest createTodoRequest)
+    {
+        todoRepository.Create(new CreateTodo
+        {
+            Name = createTodoRequest.Name,
+            DueDate = createTodoRequest.DueDate,
+            Status = createTodoRequest.Status
+        });
+    }
+}
+
 [ApiController]
 [Route("api/[controller]")]
-public class TodoController(ITodoRepository todoRepository) : ControllerBase
+public class TodoController(ITodoService todoService) : ControllerBase
 {
+
     [HttpPost]
     public ActionResult Create([FromBody] TodoRequest createTodoRequest)
     {
@@ -15,12 +34,7 @@ public class TodoController(ITodoRepository todoRepository) : ControllerBase
             return BadRequest("Sorry, you can't create a todo without a name.");
         }
         
-        todoRepository.Create(new CreateTodo
-        {
-            Name = createTodoRequest.Name,
-            DueDate = createTodoRequest.DueDate,
-            Status = createTodoRequest.Status
-        });
+        todoService.AddTodo(createTodoRequest);
         
         return Ok();
     }
@@ -42,6 +56,7 @@ public class TodoController(ITodoRepository todoRepository) : ControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<TodoResponse>), StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<TodoResponse>> GetAll()
     {
         var loadedTodos = todoRepository.GetAll();

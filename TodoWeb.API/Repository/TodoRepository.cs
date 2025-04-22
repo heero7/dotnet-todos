@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using TodoWeb.API.Controllers;
 
@@ -25,7 +26,7 @@ public interface ITodoPersistence
 
 public class CreateTodo
 {
-    public string? Name { get; set; }
+    public string Name { get; set; }
     public DateTime? DueDate { get; set; }
     public TodoStatus? Status { get; set; }
 }
@@ -43,9 +44,12 @@ public class TodoContext(DbContextOptions<TodoContext> options) : DbContext(opti
     
     public async Task Create(CreateTodo createTodo)
     {
+        Debug.Assert(createTodo.Name != null);
+        
         var todo = new Todo
         {
             Id = Guid.NewGuid(),
+            Name = createTodo.Name,
             CreatedDate = DateTime.Now,
             Status = TodoStatus.Unclaimed,
             DueDate = createTodo.DueDate
@@ -116,26 +120,24 @@ public interface ITodoRepository
 }
 public class TodoRepository(ITodoPersistence todoPersistence) : ITodoRepository
 {
-    private readonly ITodoPersistence _todoPersistence = todoPersistence;
-    
     public Task Create(CreateTodo createTodo)
     {
-        return _todoPersistence.Create(createTodo);
+        return todoPersistence.Create(createTodo);
     }
 
-    public IEnumerable<Todo> GetAll() => _todoPersistence.GetAll();
+    public IEnumerable<Todo> GetAll() => todoPersistence.GetAll();
 
-    public async Task<Todo> GetById(Guid id) => await _todoPersistence.GetById(id);
+    public async Task<Todo> GetById(Guid id) => await todoPersistence.GetById(id);
 
     public Task Update(UpdateTodo updateTodo)
     {
-        return _todoPersistence.Update(updateTodo);
+        return todoPersistence.Update(updateTodo);
     }
 
     public Task DeleteById(Guid id)
     {
-        return _todoPersistence.DeleteById(id);
+        return todoPersistence.DeleteById(id);
     }
 
-    public async Task DeleteAll() => await _todoPersistence.DeleteAll();
+    public async Task DeleteAll() => await todoPersistence.DeleteAll();
 }
