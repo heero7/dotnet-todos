@@ -1,16 +1,19 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Serilog;
 using TodoWeb.API.Controllers;
 using TodoWeb.API.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Logging
-builder.Logging
-    .ClearProviders()
-    .AddConsole()
-    .AddDebug();
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File($"/logs/Todo_WebApi_{DateTime.Now}.log")
+    .CreateLogger();
+
+// Configure Logging using SeriLog
+builder.Host.UseSerilog();
 
 // Setup for MVC
 builder.Services.AddControllers();
