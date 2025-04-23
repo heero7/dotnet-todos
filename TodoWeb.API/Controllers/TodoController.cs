@@ -38,9 +38,9 @@ public class TodoController(ITodoService todoService) : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<TodoResponse>), StatusCodes.Status200OK)]
-    public ActionResult<IEnumerable<TodoResponse>> GetAll()
+    public async Task<ActionResult<IEnumerable<TodoResponse>>> GetAll()
     {
-        var todos = todoService.GetAll();
+        var todos = await todoService.GetAll();
         var enumerable = todos as TodoResponse[] ?? todos.ToArray();
         if (enumerable.Length != 0)
         {
@@ -59,12 +59,7 @@ public class TodoController(ITodoService todoService) : ControllerBase
             return Ok(todoResponses);
         }
 
-        Console.WriteLine("Sorry, we had trouble loading those items. Try again.");
-        return Ok(new List<TodoResponse>
-        {
-            new() { Id = Guid.NewGuid(), Name = "Clean mirrors", DueDate = DateTime.Now.AddDays(1), Status = TodoStatus.Unclaimed },
-            new() { Id = Guid.NewGuid(), Name = "Take Basil out", DueDate = DateTime.Now.AddHours(2), Status = TodoStatus.Overdue },
-            new() { Id = Guid.NewGuid(), Name = "Practice Dotnet", DueDate = DateTime.Now.AddDays(3), Status = TodoStatus.InProgress },
-        });
+        Console.WriteLine("Nothing was loaded");
+        return Ok(Enumerable.Empty<TodoResponse>());
     }
 }

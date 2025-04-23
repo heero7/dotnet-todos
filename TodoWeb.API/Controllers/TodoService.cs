@@ -5,7 +5,7 @@ namespace TodoWeb.API.Controllers;
 public interface ITodoService
 {
     public void AddTodo(TodoRequest createTodoRequest);
-    IEnumerable<TodoResponse> GetAll();
+    Task<IEnumerable<TodoResponse>> GetAll();
     Task<TodoResponse> GetById(Guid id);
 }
 
@@ -21,9 +21,15 @@ public class TodoService(ITodoRepository todoRepository) : ITodoService
         });
     }
 
-    public IEnumerable<TodoResponse> GetAll()
+    public async Task<IEnumerable<TodoResponse>> GetAll()
     {
-        throw new NotImplementedException();
+        var todos = await todoRepository.GetAll();
+        var todoResponses = todos.Select(todo => new TodoResponse
+            {
+                Id = todo.Id, Name = todo.Name, Status = todo.Status, DueDate = todo.DueDate,
+            })
+            .ToList();
+        return todoResponses;
     }
 
     public Task<TodoResponse> GetById(Guid id)

@@ -7,7 +7,7 @@ namespace TodoWeb.API.Repository;
 public interface ITodoPersistence
 {
     public Task Create(CreateTodo createTodo);
-    public IEnumerable<Todo> GetAll();
+    public Task<List<Todo>> GetAll();
     public Task<Todo> GetById(Guid id);
     public Task Update(UpdateTodo updateTodo);
     public Task DeleteById(Guid id);
@@ -34,9 +34,9 @@ public class TodoContext(DbContextOptions<TodoContext> options) : DbContext(opti
         await SaveChangesAsync();
     }
 
-    public IEnumerable<Todo> GetAll()
+    public Task<List<Todo>> GetAll()
     {
-        return Todos;
+        return Todos.ToListAsync();
     }
 
     public async Task<Todo> GetById(Guid id)

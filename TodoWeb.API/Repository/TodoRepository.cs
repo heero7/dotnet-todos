@@ -30,7 +30,7 @@ public class UpdateTodo
 public interface ITodoRepository
 {
     public Task Create(CreateTodo createTodo);
-    public IEnumerable<Todo> GetAll();
+    public Task<List<Todo>> GetAll();
     public Task<Todo> GetById(Guid id);
     public Task Update(UpdateTodo updateTodo);
     public Task DeleteById(Guid id);
@@ -43,7 +43,7 @@ public class TodoRepository(ITodoPersistence todoPersistence) : ITodoRepository
         return todoPersistence.Create(createTodo);
     }
 
-    public IEnumerable<Todo> GetAll() => todoPersistence.GetAll();
+    public Task<List<Todo>> GetAll() => todoPersistence.GetAll();
 
     public async Task<Todo> GetById(Guid id) => await todoPersistence.GetById(id);
 
