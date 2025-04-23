@@ -4,9 +4,10 @@ namespace TodoWeb.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TodoController(ITodoService todoService) : ControllerBase
+public class TodoController(ITodoService todoService, ILogger<TodoController> logger) : ControllerBase
 {
-
+    private readonly ILogger _logger = logger;
+    
     [HttpPost]
     public ActionResult Create([FromBody] TodoRequest createTodoRequest)
     {
@@ -14,6 +15,8 @@ public class TodoController(ITodoService todoService) : ControllerBase
         {
             return BadRequest("Sorry, you can't create a todo without a name.");
         }
+        
+        _logger.LogInformation("Hello, we're logging!");
         
         todoService.AddTodo(createTodoRequest);
         

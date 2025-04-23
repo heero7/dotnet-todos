@@ -6,6 +6,12 @@ using TodoWeb.API.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Logging
+builder.Logging
+    .ClearProviders()
+    .AddConsole()
+    .AddDebug();
+
 // Setup for MVC
 builder.Services.AddControllers();
 
