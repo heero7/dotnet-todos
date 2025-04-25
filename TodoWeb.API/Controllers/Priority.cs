@@ -1,6 +1,6 @@
 namespace TodoWeb.API.Controllers;
 
-public enum TodoStatus
+public enum Priority
 {
     Unclaimed,
     InProgress,

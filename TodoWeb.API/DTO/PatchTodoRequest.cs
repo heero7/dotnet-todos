@@ -11,7 +11,12 @@ public class PatchTodoRequest
     [StringLength(1024)]
     public string? Name { get; set; }
     
+    [StringLength(1024)]
+    public string? Description { get; set; }
+    
     [Range(0, 4)]
-    public TodoStatus? Status { get; set; }
+    public Priority? Priority { get; set; }
     public DateTime? DueDate { get; set; }
+    
+    public bool? IsCompleted { get; set; }
 }

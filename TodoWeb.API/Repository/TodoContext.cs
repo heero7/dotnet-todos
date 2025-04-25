@@ -29,8 +29,9 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
         {
             Id = Guid.NewGuid(),
             Name = createTodo.Name,
+            Description = createTodo.Description,
             CreatedDate = DateTime.Now,
-            Status = TodoStatus.Unclaimed,
+            Priority = Priority.Unclaimed,
             DueDate = createTodo.DueDate
         };
         
@@ -68,8 +69,10 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
         Todos.Attach(todo);
 
         todo.Name = updateTodo?.Name ?? todo.Name;
-        todo.Status = updateTodo?.Status ?? todo.Status;
+        todo.Description = updateTodo?.Description ?? todo.Description;
+        todo.Priority = updateTodo?.Priority ?? todo.Priority;
         todo.DueDate = updateTodo?.DueDate;
+        todo.IsCompleted = updateTodo?.IsCompleted ?? todo.IsCompleted;
 
         await SaveChangesAsync();
         return todo;

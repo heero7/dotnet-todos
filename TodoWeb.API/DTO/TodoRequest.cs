@@ -7,8 +7,15 @@ public class TodoRequest
 {
     
     [Required]
-    [StringLength(1024)]
+    [StringLength(512)]
     public string Name { get; set; }
-    public TodoStatus? Status { get; set; }
+    
+    [StringLength(1024)]
+    public string? Description { get; set; }
+    
+    [Range(0, 4)]
+    public Priority? Priority { get; set; }
+    
+    [DataType(DataType.Date)]
     public DateTime? DueDate { get; set; }
 }

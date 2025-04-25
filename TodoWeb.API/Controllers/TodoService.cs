@@ -23,7 +23,8 @@ public class TodoService(ITodoRepository todoRepository, ILogger<TodoService> lo
         {
             Name = createTodoRequest.Name,
             DueDate = createTodoRequest.DueDate,
-            Status = createTodoRequest.Status
+            Priority = createTodoRequest.Priority,
+            Description = createTodoRequest.Description
         });
         
         return new TodoResponse
@@ -31,7 +32,7 @@ public class TodoService(ITodoRepository todoRepository, ILogger<TodoService> lo
             Id = todo.Id,
             Name = todo.Name,
             DueDate = todo.DueDate,
-            Status = todo.Status
+            Priority = todo.Priority
         };
     }
 
@@ -40,7 +41,7 @@ public class TodoService(ITodoRepository todoRepository, ILogger<TodoService> lo
         var todos = await todoRepository.GetAll();
         var todoResponses = todos.Select(todo => new TodoResponse
             {
-                Id = todo.Id, Name = todo.Name, Status = todo.Status, DueDate = todo.DueDate,
+                Id = todo.Id, Name = todo.Name, Priority = todo.Priority, DueDate = todo.DueDate,
             })
             .ToList();
         return todoResponses;
@@ -60,7 +61,7 @@ public class TodoService(ITodoRepository todoRepository, ILogger<TodoService> lo
              Id = todoById.Id,
              Name = todoById.Name,
              DueDate = todoById.DueDate,
-             Status = todoById.Status
+             Priority = todoById.Priority
          };
     }
 
@@ -71,7 +72,8 @@ public class TodoService(ITodoRepository todoRepository, ILogger<TodoService> lo
             Id = patchTodoRequest.Id,
             Name = patchTodoRequest.Name,
             DueDate = patchTodoRequest.DueDate,
-            Status = patchTodoRequest.Status
+            Priority = patchTodoRequest.Priority,
+            IsCompleted = patchTodoRequest.IsCompleted
         });
 
         return new TodoResponse
@@ -79,7 +81,7 @@ public class TodoService(ITodoRepository todoRepository, ILogger<TodoService> lo
             Id = updatedTodo.Id,
             Name = updatedTodo.Name,
             DueDate = updatedTodo.DueDate,
-            Status = updatedTodo.Status
+            Priority = updatedTodo.Priority
         };
     }
 

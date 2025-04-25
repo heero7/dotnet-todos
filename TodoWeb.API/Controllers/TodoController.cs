@@ -46,26 +46,14 @@ public class TodoController(ITodoService todoService, ILogger<TodoController> lo
     {
         var todos = await todoService.GetAll();
         var enumerable = todos as TodoResponse[] ?? todos.ToArray();
-        
-        if (enumerable.Length == 0)
-        {
-            _logger.LogWarning("No todos to load.");
-            return Ok(Enumerable.Empty<TodoResponse>());
-        }
-        
-        var todoResponses = new TodoResponse[enumerable.Length];
-        for (var i = 0; i < enumerable.Length; i++)
-        {
-            todoResponses[i] = new TodoResponse
-            {
-                Id = enumerable[i].Id,
-                Name = enumerable[i].Name,
-                DueDate = enumerable[i].DueDate,
-                Status = enumerable[i].Status
-            };
-        }
 
-        return Ok(todoResponses);
+        if (enumerable.Length != 0)
+        {
+            return Ok(enumerable);
+        }
+        
+        _logger.LogWarning("No todos to load.");
+        return Ok(Enumerable.Empty<TodoResponse>());
     }
 
     [HttpPatch]
