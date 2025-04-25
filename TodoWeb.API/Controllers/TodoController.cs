@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using TodoWeb.API.Dto;
 
 namespace TodoWeb.API.Controllers;
 
@@ -9,33 +10,33 @@ public class TodoController(ITodoService todoService, ILogger<TodoController> lo
     private readonly ILogger _logger = logger;
     
     [HttpPost]
-    public ActionResult Create([FromBody] TodoRequest createTodoRequest)
+    public ActionResult<TodoResponse> Create([FromBody] TodoRequest createTodoRequest)
     {
         if (string.IsNullOrEmpty(createTodoRequest.Name))
         {
-            return BadRequest("Sorry, you can't create a todo without a name.");
+            _logger.LogWarning("Validation error, Name was null/empty.");
+            return BadRequest("Validation Error creating todo.");
         }
         
-        _logger.LogInformation("Hello, we're logging!");
+        var todo = todoService.AddTodo(createTodoRequest);
         
-        todoService.AddTodo(createTodoRequest);
-        
-        return Ok();
+        return Ok(todo);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult> GetById(Guid id)
+    public async Task<ActionResult<TodoResponse>> GetById(Guid id)
     {
         if (id == Guid.Empty)
         {
             return BadRequest("Guid was empty, that todo doesn't exist.");
         }
 
-        var todo = await todoService.GetById(id);
-        var todoResponse = new TodoResponse
+        var todoResponse = await todoService.GetById(id);
+        if (todoResponse == null)
         {
-            Id = todo.Id,
-        };
+            return NotFound();
+        }
+        
         return Ok(todoResponse);
     }
 
@@ -45,24 +46,58 @@ public class TodoController(ITodoService todoService, ILogger<TodoController> lo
     {
         var todos = await todoService.GetAll();
         var enumerable = todos as TodoResponse[] ?? todos.ToArray();
-        if (enumerable.Length != 0)
+        
+        if (enumerable.Length == 0)
         {
-            var todoResponses = new TodoResponse[enumerable.Length];
-            for (var i = 0; i < enumerable.Length; i++)
+            _logger.LogWarning("No todos to load.");
+            return Ok(Enumerable.Empty<TodoResponse>());
+        }
+        
+        var todoResponses = new TodoResponse[enumerable.Length];
+        for (var i = 0; i < enumerable.Length; i++)
+        {
+            todoResponses[i] = new TodoResponse
             {
-                todoResponses[i] = new TodoResponse
-                {
-                    Id = enumerable[i].Id,
-                    Name = enumerable[i].Name,
-                    DueDate = enumerable[i].DueDate,
-                    Status = enumerable[i].Status
-                };
-            }
-
-            return Ok(todoResponses);
+                Id = enumerable[i].Id,
+                Name = enumerable[i].Name,
+                DueDate = enumerable[i].DueDate,
+                Status = enumerable[i].Status
+            };
         }
 
-        Console.WriteLine("Nothing was loaded");
-        return Ok(Enumerable.Empty<TodoResponse>());
+        return Ok(todoResponses);
+    }
+
+    [HttpPatch]
+    public async Task<ActionResult<TodoResponse>> Patch([FromBody] PatchTodoRequest patchTodoRequest)
+    {
+        if (patchTodoRequest.Id == Guid.Empty)
+        {
+            _logger.LogWarning("Cannot have an empty id patching todo.");
+            return BadRequest("Validation Error patching todo.");
+        }
+
+        var updatedTodo = await todoService.Update(patchTodoRequest);
+        return Ok(updatedTodo);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<ActionResult> DeleteById(Guid id)
+    {
+        if (Guid.Empty == id)
+        {
+            _logger.LogWarning("Id passed in to DeleteById was empty => {id}.", id);
+            return BadRequest();
+        }
+
+        await todoService.DeleteById(id);
+        return NoContent();
+    }
+
+    [HttpDelete]
+    public async Task<ActionResult> Delete()
+    {
+        await todoService.DeleteAll();
+        return NoContent();
     }
 }

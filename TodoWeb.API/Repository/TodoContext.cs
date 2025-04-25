@@ -1,24 +1,27 @@
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using TodoWeb.API.Controllers;
+using TodoWeb.API.Models;
 
 namespace TodoWeb.API.Repository;
 
 public interface ITodoPersistence
 {
-    public Task Create(CreateTodo createTodo);
+    public Task<Todo> Create(CreateTodo createTodo);
     public Task<List<Todo>> GetAll();
     public Task<Todo> GetById(Guid id);
-    public Task Update(UpdateTodo updateTodo);
+    public Task<Todo> Update(UpdateTodo updateTodo);
     public Task DeleteById(Guid id);
     public Task DeleteAll();
 }
 
-public class TodoContext(DbContextOptions<TodoContext> options) : DbContext(options), ITodoPersistence
+public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoContext> logger) 
+    : DbContext(options), ITodoPersistence
 {
+    private readonly ILogger _logger = logger;
     public DbSet<Todo> Todos { get; set; }
     
-    public async Task Create(CreateTodo createTodo)
+    public async Task<Todo> Create(CreateTodo createTodo)
     {
         Debug.Assert(createTodo.Name != null);
         
@@ -30,8 +33,10 @@ public class TodoContext(DbContextOptions<TodoContext> options) : DbContext(opti
             Status = TodoStatus.Unclaimed,
             DueDate = createTodo.DueDate
         };
+        
         await Todos.AddAsync(todo);
         await SaveChangesAsync();
+        return todo;
     }
 
     public Task<List<Todo>> GetAll()
@@ -44,30 +49,30 @@ public class TodoContext(DbContextOptions<TodoContext> options) : DbContext(opti
         var todo = await Todos.FirstOrDefaultAsync(t => t.Id == id);
         if (todo == null)
         {
-            Console.WriteLine($"Getting Todo with ID: {id} was null." +
-                              $"The todo will be null");
+            _logger.LogWarning("Getting Todo with ID: {id} was null." +
+                              $"The todo will be null", id);
         }
         return todo;
     }
 
-    public async Task Update(UpdateTodo updateTodo)
+    public async Task<Todo> Update(UpdateTodo updateTodo)
     {
         var todo = await Todos
             .FirstOrDefaultAsync(t => t.Id == updateTodo.Id);
         if (todo == null)
         {
-            Console.WriteLine($"Getting Todo with ID: {updateTodo.Id} was null." +
-                              $"The todo will be null");
-            return;
+            _logger.LogWarning("Getting Todo with ID: {id} was null. The todo will be null", updateTodo.Id);
+            return null;
         }
 
         Todos.Attach(todo);
 
         todo.Name = updateTodo?.Name ?? todo.Name;
-        todo.Status = updateTodo?.TodoStatus ?? todo.Status;
+        todo.Status = updateTodo?.Status ?? todo.Status;
         todo.DueDate = updateTodo?.DueDate;
 
         await SaveChangesAsync();
+        return todo;
     }
 
     public async Task DeleteById(Guid id)
