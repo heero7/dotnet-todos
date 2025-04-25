@@ -25,6 +25,8 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
     {
         Debug.Assert(createTodo.Name != null);
         
+        //todo: check if we've already created a todo with that name
+        
         var todo = new Todo
         {
             Id = Guid.NewGuid(),
@@ -65,6 +67,8 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
             _logger.LogWarning("Getting Todo with ID: {id} was null. The todo will be null", updateTodo.Id);
             return null;
         }
+        
+        //todo: check if we've already created a todo with that name
 
         Todos.Attach(todo);
 

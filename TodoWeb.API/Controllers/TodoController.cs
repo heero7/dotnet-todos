@@ -1,7 +1,21 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using TodoWeb.API.Dto;
 
 namespace TodoWeb.API.Controllers;
+
+public class NotInPast : ValidationAttribute
+{
+    public override bool IsValid(object? value)
+    {
+        if (value is DateTime date)
+        {
+            return date > DateTime.Now;
+        }
+
+        return true;
+    }
+}
 
 [ApiController]
 [Route("api/[controller]")]

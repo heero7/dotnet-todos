@@ -17,5 +17,6 @@ public class TodoRequest
     public Priority? Priority { get; set; }
     
     [DataType(DataType.Date)]
+    [NotInPast(ErrorMessage = "Date cannot be in the past.")]
     public DateTime? DueDate { get; set; }
 }
