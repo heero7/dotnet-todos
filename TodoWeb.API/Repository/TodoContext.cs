@@ -11,7 +11,9 @@ public interface ITodoPersistence
     public Task<List<Todo>> GetAll();
     public Task<Todo> GetById(Guid id);
     public Task<Todo> Update(UpdateTodo updateTodo);
-    public Task DeleteById(Guid id);
+    public Task SoftDeleteById(Guid id);
+    public Task SoftDeleteAll();
+    public Task<Todo> DeleteById(Guid id);
     public Task DeleteAll();
 }
 
@@ -82,14 +84,45 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
         return todo;
     }
 
-    public async Task DeleteById(Guid id)
+    public async Task SoftDeleteById(Guid id)
     {
-        var todo = new Todo { Id = id };
+        var todo = await Todos
+            .FirstOrDefaultAsync(t => t.Id == id);
+        if (todo == null)
+        {
+            _logger.LogWarning("Getting Todo with ID: {id} was null. The todo will be null", id);
+            return;
+        }
+
         Todos.Attach(todo);
-        Todos.Remove(todo);
+        todo.DeletedAt = DateTime.Now;
         await SaveChangesAsync();
     }
 
+    public async Task SoftDeleteAll()
+    {
+        Todos.AttachRange();
+        // todo: attach.. a whole range?
+        await SaveChangesAsync();
+    }
+
+    //todo: change to a bool, use save change async > 0 
+    public async Task<Todo> DeleteById(Guid id)
+    {
+        var todo = await Todos
+            .FirstOrDefaultAsync(t => t.Id == id);
+        if (todo == null)
+        {
+            return null;
+        }
+
+        Todos.Attach(todo);
+        Todos.Remove(todo);
+        await SaveChangesAsync();
+        return todo;
+    }
+
+    // todo: return bool if count == what we had in todos, we are good.
     public async Task DeleteAll()
     {
         Todos.RemoveRange(Todos);

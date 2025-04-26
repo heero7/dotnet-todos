@@ -24,9 +24,9 @@ public class TodoController(ITodoService todoService, ILogger<TodoController> lo
     private readonly ILogger _logger = logger;
     
     [HttpPost]
-    public ActionResult<TodoResponse> Create([FromBody] TodoRequest createTodoRequest)
+    public async Task<ActionResult<TodoResponse>> Create([FromBody] TodoRequest createTodoRequest)
     {
-        var todo = todoService.AddTodo(createTodoRequest);
+        var todo = await todoService.AddTodo(createTodoRequest);
         
         return Ok(todo);
     }
