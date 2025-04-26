@@ -1,7 +1,8 @@
-using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using Serilog;
+using Serilog.Core;
+using TodoWeb.API;
 using TodoWeb.API.Controllers;
 using TodoWeb.API.Repository;
 
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
+    // todo: this isn't working
     .WriteTo.File($"/logs/Todo_WebApi_{DateTime.Now}.log")
     .CreateLogger();
 
@@ -16,7 +18,23 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Setup for MVC
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .ConfigureApiBehaviorOptions(opt =>
+    {
+        /*
+         * Adds the logging when hitting any validation
+         * issues. Without this, developers would never
+         * see the logs when hitting validation errors.
+         */
+        opt.InvalidModelStateResponseFactory = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning("Validation Error hitting this endpoint. {errors}",
+                context.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+            return new BadRequestObjectResult(context.ModelState);
+        };
+    });
 
 // Add documentation and interaction w/o postman.
 builder.Services.AddSwaggerGen();
@@ -29,17 +47,18 @@ builder.Services.AddScoped<ITodoService, TodoService>();
 builder.Services.AddScoped<ITodoRepository, TodoRepository>();
 builder.Services.AddScoped<ITodoPersistence, TodoContext>();
 
+builder.Services.AddProblemDetails();
+
+// Custom Exception Handling
+builder.Services.AddExceptionHandler<TodoGlobalExceptionHandler>();
+
 // Add services to the container.
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
 /*
- * Reduces exception hell.
+ * Reduces exception hell. Place this as close
+ * to the Build method so it catches exceptions
+ * early. (i.e. if you had other middleware)
  * Without this, you'd have to write code like
  * try {
  *  someService.Foo();
@@ -48,15 +67,14 @@ if (app.Environment.IsDevelopment())
  * }
  * Everywhere, maps an exception to a status code
  */
-app.UseExceptionHandler(config =>
+app.UseExceptionHandler();
+
+if (app.Environment.IsDevelopment())
 {
-    config.Run(async cxt =>
-    {
-        var exception = cxt.Features.Get<IExceptionHandlerFeature>()?.Error;
-        var logger = cxt.RequestServices.GetRequiredService<ILogger<Program>>();
-        await cxt.Response.WriteAsync(JsonConvert.SerializeObject(new { error = "You got an error. Sorry!" }));
-    });
-});
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 
 app.UseHttpsRedirection();
 app.MapControllers();

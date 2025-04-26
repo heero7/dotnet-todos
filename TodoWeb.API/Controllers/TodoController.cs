@@ -26,12 +26,6 @@ public class TodoController(ITodoService todoService, ILogger<TodoController> lo
     [HttpPost]
     public ActionResult<TodoResponse> Create([FromBody] TodoRequest createTodoRequest)
     {
-        if (string.IsNullOrEmpty(createTodoRequest.Name))
-        {
-            _logger.LogWarning("Validation error, Name was null/empty.");
-            return BadRequest("Validation Error creating todo.");
-        }
-        
         var todo = todoService.AddTodo(createTodoRequest);
         
         return Ok(todo);
@@ -66,19 +60,12 @@ public class TodoController(ITodoService todoService, ILogger<TodoController> lo
             return Ok(enumerable);
         }
         
-        _logger.LogWarning("No todos to load.");
         return Ok(Enumerable.Empty<TodoResponse>());
     }
 
     [HttpPatch]
     public async Task<ActionResult<TodoResponse>> Patch([FromBody] PatchTodoRequest patchTodoRequest)
     {
-        if (patchTodoRequest.Id == Guid.Empty)
-        {
-            _logger.LogWarning("Cannot have an empty id patching todo.");
-            return BadRequest("Validation Error patching todo.");
-        }
-
         var updatedTodo = await todoService.Update(patchTodoRequest);
         return Ok(updatedTodo);
     }

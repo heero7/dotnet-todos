@@ -6,7 +6,7 @@ namespace TodoWeb.API.Dto;
 public class TodoRequest
 {
     
-    [Required]
+    [Required(ErrorMessage = "Name is a required field for TodoRequest")]
     [StringLength(512)]
     public string Name { get; set; }
     
