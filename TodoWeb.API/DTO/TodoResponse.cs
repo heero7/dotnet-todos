@@ -10,4 +10,6 @@ public class TodoResponse
     public bool IsCompleted { get; set; }
     public Priority Priority { get; set; }
     public DateTime? DueDate { get; set; }
+    // todo: add a modified date to just know when this was updated (on create time == modified date, mod = any update or delete)
+    // public DateTime ModifiedDate { get; set; }
 }

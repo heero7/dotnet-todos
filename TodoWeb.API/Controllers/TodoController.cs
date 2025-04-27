@@ -92,4 +92,36 @@ public class TodoController(ITodoService todoService, ILogger<TodoController> lo
         await todoService.DeleteAll();
         return NoContent();
     }
+
+    [HttpDelete("softdelete/{id:guid}")]
+    public async Task<ActionResult> SoftDeleteById(Guid id)
+    {
+        if (Guid.Empty == id)
+        {
+            _logger.LogWarning("Id passed in to SoftDeleteById was empty");
+            return BadRequest("Guid was empty.");
+        }
+        
+        var result = await todoService.SoftDeleteById(id);
+        return result switch
+        {
+            DeleteStatus.Success => Ok(),
+            DeleteStatus.Failure => Problem(statusCode: 500, title: "Internal Server Error", detail: "We had trouble processing your request"),
+            DeleteStatus.BadUserInput => BadRequest("A todo with this id does not exist"),
+            _ => Problem(statusCode: 500, title: "Internal Server Error", detail: "We had trouble processing your request")
+        };
+    }
+    
+    [HttpDelete("softdelete/")]
+    public async Task<ActionResult> SoftDeleteAll()
+    {
+        var result = await todoService.SoftDeleteAll();
+        return result switch
+        {
+            DeleteStatus.Success => Ok(),
+            DeleteStatus.Failure => Problem(statusCode: 500, title: "Internal Server Error", detail: "We had trouble processing your request"),
+            DeleteStatus.BadUserInput => BadRequest("A todo with this id does not exist"),
+            _ => Problem(statusCode: 500, title: "Internal Server Error", detail: "We had trouble processing your request")
+        };
+    }
 }

@@ -4,6 +4,12 @@ using TodoWeb.API.Repository;
 
 namespace TodoWeb.API.Controllers;
 
+public enum DeleteStatus
+{
+    Success,
+    Failure,
+    BadUserInput
+}
 public interface ITodoService
 {
     public Task<TodoResponse> AddTodo(TodoRequest createTodoRequest);
@@ -12,6 +18,8 @@ public interface ITodoService
     Task<TodoResponse> Update(PatchTodoRequest patchTodoRequest);
     Task DeleteById(Guid id);
     Task DeleteAll();
+    Task<DeleteStatus> SoftDeleteById(Guid id);
+    Task<DeleteStatus> SoftDeleteAll();
 }
 
 public class TodoService(ITodoRepository todoRepository, ILogger<TodoService> logger) : ITodoService
@@ -49,7 +57,12 @@ public class TodoService(ITodoRepository todoRepository, ILogger<TodoService> lo
         var todos = await todoRepository.GetAll();
         var todoResponses = todos.Select(todo => new TodoResponse
             {
-                Id = todo.Id, Name = todo.Name, Priority = todo.Priority, DueDate = todo.DueDate,
+                Id = todo.Id, 
+                Name = todo.Name, 
+                Description = todo.Description,
+                Priority = todo.Priority, 
+                DueDate = todo.DueDate,
+                IsCompleted = todo.IsCompleted
             })
             .ToList();
         return todoResponses;
@@ -107,4 +120,27 @@ public class TodoService(ITodoRepository todoRepository, ILogger<TodoService> lo
     public async Task DeleteById(Guid id) => await todoRepository.DeleteById(id);
 
     public async Task DeleteAll() => await todoRepository.DeleteAll();
+    public async Task<DeleteStatus> SoftDeleteById(Guid id)
+    {
+        var result = await todoRepository.SoftDeleteById(id);
+        return result switch
+        {
+            DeleteOperationStatus.Success => DeleteStatus.Success,
+            DeleteOperationStatus.SaveFailed => DeleteStatus.Failure,
+            DeleteOperationStatus.EntityNotFound => DeleteStatus.BadUserInput,
+            _ => DeleteStatus.Failure
+        };
+    }
+
+    public async Task<DeleteStatus> SoftDeleteAll()
+    {
+        var result = await todoRepository.SoftDeleteAll();
+        return result switch
+        {
+            DeleteOperationStatus.Success => DeleteStatus.Success,
+            DeleteOperationStatus.SaveFailed => DeleteStatus.Failure,
+            DeleteOperationStatus.EntityNotFound => DeleteStatus.BadUserInput,
+            _ => DeleteStatus.Failure
+        };
+    }
 }

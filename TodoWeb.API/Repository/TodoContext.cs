@@ -1,9 +1,15 @@
-using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using TodoWeb.API.Controllers;
 using TodoWeb.API.Models;
 
 namespace TodoWeb.API.Repository;
+
+public enum DeleteOperationStatus
+{
+    Success,
+    EntityNotFound,
+    SaveFailed
+}
 
 public interface ITodoPersistence
 {
@@ -11,8 +17,8 @@ public interface ITodoPersistence
     public Task<List<Todo>> GetAll();
     public Task<Todo> GetById(Guid id);
     public Task<Todo> Update(UpdateTodo updateTodo);
-    public Task SoftDeleteById(Guid id);
-    public Task SoftDeleteAll();
+    public Task<DeleteOperationStatus> SoftDeleteById(Guid id);
+    public Task<DeleteOperationStatus> SoftDeleteAll();
     public Task<Todo> DeleteById(Guid id);
     public Task DeleteAll();
 }
@@ -25,9 +31,6 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
     
     public async Task<Todo> Create(CreateTodo createTodo)
     {
-        Debug.Assert(createTodo.Name != null);
-        
-        //todo: check if we've already created a todo with that name
         var previousTodo = await Todos.FirstOrDefaultAsync(t => t.Name == createTodo.Name);
         if (previousTodo != null)
         {
@@ -52,7 +55,9 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
 
     public Task<List<Todo>> GetAll()
     {
-        return Todos.ToListAsync();
+        return Todos
+            .Where(todo => todo.DeletedAt == null)
+            .ToListAsync();
     }
 
     public async Task<Todo> GetById(Guid id)
@@ -60,9 +65,10 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
         var todo = await Todos.FirstOrDefaultAsync(t => t.Id == id);
         if (todo == null)
         {
-            _logger.LogWarning("Getting Todo with ID: {id} was null." +
+            _logger.LogError("Getting Todo with ID: {id} was null." +
                               $"The todo will be null", id);
         }
+        
         return todo;
     }
 
@@ -72,7 +78,7 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
             .FirstOrDefaultAsync(t => t.Id == updateTodo.Id);
         if (existingTodo == null)
         {
-            _logger.LogWarning("Getting Todo with ID: {id} was null. The todo will be null", updateTodo.Id);
+            _logger.LogError("Getting Todo with ID: {id} was null. The todo will be null", updateTodo.Id);
             return null;
         }
         
@@ -81,7 +87,7 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
 
         if (string.Equals(existingTodo.Name, updateTodo.Name))
         {
-            _logger.LogError("A todo with this name already exists for this account.");
+            _logger.LogWarning("A todo with this name already exists for this account.");
         }
         else
         {
@@ -96,26 +102,48 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
         return existingTodo;
     }
 
-    public async Task SoftDeleteById(Guid id)
+    public async Task<DeleteOperationStatus> SoftDeleteById(Guid id)
     {
         var todo = await Todos
             .FirstOrDefaultAsync(t => t.Id == id);
         if (todo == null)
         {
-            _logger.LogWarning("Getting Todo with ID: {id} was null. The todo will be null", id);
-            return;
+            _logger.LogError("Getting Todo with ID: {id} was null.", id);
+            return DeleteOperationStatus.EntityNotFound;
         }
 
         Todos.Attach(todo);
         todo.DeletedAt = DateTime.Now;
-        await SaveChangesAsync();
+        var changes = await SaveChangesAsync();
+        if (changes != 1)
+        {
+            _logger.LogError("Expected Single SoftDelete was off. Expected=1, Actual={act}", changes);
+            return DeleteOperationStatus.SaveFailed;
+        }
+
+        return DeleteOperationStatus.Success;
     }
 
-    public async Task SoftDeleteAll()
+    public async Task<DeleteOperationStatus> SoftDeleteAll()
     {
         Todos.AttachRange();
-        // todo: attach.. a whole range?
-        await SaveChangesAsync();
+        var allTodos = await Todos.ToListAsync();
+        var expectedOperations = allTodos.Count;
+        foreach (var todo in allTodos)
+        {
+            todo.DeletedAt = DateTime.Now;
+        }
+        
+        var actualOperations = await SaveChangesAsync();
+        if (actualOperations != expectedOperations)
+        {
+            _logger.LogError("Expected soft deletes were off. Expected={ex}, Actual={act}", 
+                expectedOperations,
+                actualOperations);
+            return DeleteOperationStatus.SaveFailed;
+        }
+
+        return DeleteOperationStatus.Success;
     }
 
     //todo: change to a bool, use save change async > 0 
@@ -125,6 +153,7 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
             .FirstOrDefaultAsync(t => t.Id == id);
         if (todo == null)
         {
+            _logger.LogError("Getting Todo with ID: {id} was null.", id);
             return null;
         }
 

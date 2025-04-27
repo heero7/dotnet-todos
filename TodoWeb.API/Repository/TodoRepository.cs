@@ -10,6 +10,8 @@ public interface ITodoRepository
     public Task<Todo> Update(UpdateTodo updateTodo);
     public Task DeleteById(Guid id);
     public Task DeleteAll();
+    public Task<DeleteOperationStatus> SoftDeleteById(Guid id);
+    public Task<DeleteOperationStatus> SoftDeleteAll();
 }
 public class TodoRepository(ITodoPersistence todoPersistence) : ITodoRepository
 {
@@ -34,4 +36,13 @@ public class TodoRepository(ITodoPersistence todoPersistence) : ITodoRepository
     }
 
     public async Task DeleteAll() => await todoPersistence.DeleteAll();
+    public Task<DeleteOperationStatus> SoftDeleteById(Guid id)
+    {
+        return todoPersistence.SoftDeleteById(id);
+    }
+
+    public Task<DeleteOperationStatus> SoftDeleteAll()
+    {
+        return todoPersistence.SoftDeleteAll();
+    }
 }
