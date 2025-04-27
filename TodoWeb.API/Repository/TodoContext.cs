@@ -28,6 +28,12 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
         Debug.Assert(createTodo.Name != null);
         
         //todo: check if we've already created a todo with that name
+        var previousTodo = await Todos.FirstOrDefaultAsync(t => t.Name == createTodo.Name);
+        if (previousTodo != null)
+        {
+            _logger.LogError("A todo with this name already exists for this account.");
+            return null;
+        }
         
         var todo = new Todo
         {
@@ -62,26 +68,32 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
 
     public async Task<Todo> Update(UpdateTodo updateTodo)
     {
-        var todo = await Todos
+        var existingTodo = await Todos
             .FirstOrDefaultAsync(t => t.Id == updateTodo.Id);
-        if (todo == null)
+        if (existingTodo == null)
         {
             _logger.LogWarning("Getting Todo with ID: {id} was null. The todo will be null", updateTodo.Id);
             return null;
         }
         
-        //todo: check if we've already created a todo with that name
 
-        Todos.Attach(todo);
+        Todos.Attach(existingTodo);
 
-        todo.Name = updateTodo?.Name ?? todo.Name;
-        todo.Description = updateTodo?.Description ?? todo.Description;
-        todo.Priority = updateTodo?.Priority ?? todo.Priority;
-        todo.DueDate = updateTodo?.DueDate;
-        todo.IsCompleted = updateTodo?.IsCompleted ?? todo.IsCompleted;
+        if (string.Equals(existingTodo.Name, updateTodo.Name))
+        {
+            _logger.LogError("A todo with this name already exists for this account.");
+        }
+        else
+        {
+            existingTodo.Name = updateTodo.Name ?? existingTodo.Name;
+        }
+        existingTodo.Description = updateTodo.Description ?? existingTodo.Description;
+        existingTodo.Priority = updateTodo.Priority ?? existingTodo.Priority;
+        existingTodo.DueDate = updateTodo.DueDate ?? existingTodo.DueDate;
+        existingTodo.IsCompleted = updateTodo.IsCompleted ?? existingTodo.IsCompleted;
 
         await SaveChangesAsync();
-        return todo;
+        return existingTodo;
     }
 
     public async Task SoftDeleteById(Guid id)

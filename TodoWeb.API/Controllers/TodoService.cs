@@ -26,13 +26,21 @@ public class TodoService(ITodoRepository todoRepository, ILogger<TodoService> lo
             Priority = createTodoRequest.Priority,
             Description = createTodoRequest.Description
         });
+
+        if (todo == null)
+        {
+            _logger.LogError("A todo was already created with this name.");
+            return null;
+        }
         
         return new TodoResponse
         {
             Id = todo.Id,
             Name = todo.Name,
+            Description = todo.Description,
             DueDate = todo.DueDate,
-            Priority = todo.Priority
+            Priority = todo.Priority,
+            IsCompleted = todo.IsCompleted
         };
     }
 
@@ -60,8 +68,10 @@ public class TodoService(ITodoRepository todoRepository, ILogger<TodoService> lo
          {
              Id = todoById.Id,
              Name = todoById.Name,
+             Description = todoById.Description,
              DueDate = todoById.DueDate,
-             Priority = todoById.Priority
+             Priority = todoById.Priority,
+             IsCompleted = todoById.IsCompleted
          };
     }
 
@@ -71,17 +81,26 @@ public class TodoService(ITodoRepository todoRepository, ILogger<TodoService> lo
         {
             Id = patchTodoRequest.Id,
             Name = patchTodoRequest.Name,
+            Description = patchTodoRequest.Description,
             DueDate = patchTodoRequest.DueDate,
             Priority = patchTodoRequest.Priority,
             IsCompleted = patchTodoRequest.IsCompleted
         });
 
+        if (updatedTodo == null)
+        {
+            _logger.LogError("Error processing update of todo with id {id}", patchTodoRequest.Id);
+            return null;
+        }
+
         return new TodoResponse
         {
             Id = updatedTodo.Id,
             Name = updatedTodo.Name,
+            Description = updatedTodo.Description,
             DueDate = updatedTodo.DueDate,
-            Priority = updatedTodo.Priority
+            Priority = updatedTodo.Priority,
+            IsCompleted = updatedTodo.IsCompleted
         };
     }
 

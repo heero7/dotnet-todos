@@ -27,6 +27,10 @@ public class TodoController(ITodoService todoService, ILogger<TodoController> lo
     public async Task<ActionResult<TodoResponse>> Create([FromBody] TodoRequest createTodoRequest)
     {
         var todo = await todoService.AddTodo(createTodoRequest);
+        if (todo == null)
+        {
+            return BadRequest();
+        }
         
         return Ok(todo);
     }
@@ -55,18 +59,17 @@ public class TodoController(ITodoService todoService, ILogger<TodoController> lo
         var todos = await todoService.GetAll();
         var enumerable = todos as TodoResponse[] ?? todos.ToArray();
 
-        if (enumerable.Length != 0)
-        {
-            return Ok(enumerable);
-        }
-        
-        return Ok(Enumerable.Empty<TodoResponse>());
+        return Ok(enumerable.Length != 0 ? enumerable : Enumerable.Empty<TodoResponse>());
     }
 
     [HttpPatch]
     public async Task<ActionResult<TodoResponse>> Patch([FromBody] PatchTodoRequest patchTodoRequest)
     {
         var updatedTodo = await todoService.Update(patchTodoRequest);
+        if (updatedTodo == null)
+        {
+            return BadRequest();
+        }
         return Ok(updatedTodo);
     }
 
