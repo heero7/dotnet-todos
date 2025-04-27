@@ -1,13 +1,13 @@
-using Todo.API.Models;
+using TodoAPI.Models;
 
-namespace Todo.API.Repository;
+namespace TodoAPI.Repository;
 
 public interface ITodoRepository
 {
-    public Task<Models.Todo> Create(CreateTodo createTodo);
-    public Task<List<Models.Todo>> GetAll();
-    public Task<Models.Todo> GetById(Guid id);
-    public Task<Models.Todo> Update(UpdateTodo updateTodo);
+    public Task<Todo> Create(CreateTodo createTodo);
+    public Task<List<Todo>> GetAll();
+    public Task<Todo> GetById(Guid id);
+    public Task<Todo> Update(UpdateTodo updateTodo);
     public Task DeleteById(Guid id);
     public Task DeleteAll();
     public Task<DeleteOperationStatus> SoftDeleteById(Guid id);
@@ -16,16 +16,16 @@ public interface ITodoRepository
 public class TodoRepository(ITodoPersistence todoPersistence) : ITodoRepository
 {
     
-    public Task<Models.Todo> Create(CreateTodo createTodo)
+    public Task<Todo> Create(CreateTodo createTodo)
     {
         return todoPersistence.Create(createTodo);
     }
 
-    public Task<List<Models.Todo>> GetAll() => todoPersistence.GetAll();
+    public Task<List<Todo>> GetAll() => todoPersistence.GetAll();
 
-    public async Task<Models.Todo> GetById(Guid id) => await todoPersistence.GetById(id);
+    public async Task<Todo> GetById(Guid id) => await todoPersistence.GetById(id);
 
-    public Task<Models.Todo> Update(UpdateTodo updateTodo)
+    public Task<Todo> Update(UpdateTodo updateTodo)
     {
         return todoPersistence.Update(updateTodo);
     }

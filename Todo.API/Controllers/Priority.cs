@@ -1,4 +1,4 @@
-namespace Todo.API.Controllers;
+namespace TodoAPI.Controllers;
 
 public enum Priority
 {

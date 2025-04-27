@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
-using Todo.API.Dto;
+using TodoAPI.DTO;
 
-namespace Todo.API.Controllers;
+namespace TodoAPI.Controllers;
 
 public class NotInPast : ValidationAttribute
 {

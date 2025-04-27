@@ -1,6 +1,6 @@
-using Todo.API.Controllers;
+using TodoAPI.Controllers;
 
-namespace Todo.API.Dto;
+namespace TodoAPI.DTO;
 
 public class TodoResponse
 {

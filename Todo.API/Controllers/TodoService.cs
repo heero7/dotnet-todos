@@ -1,8 +1,8 @@
-using Todo.API.Dto;
-using Todo.API.Models;
-using Todo.API.Repository;
+using TodoAPI.DTO;
+using TodoAPI.Models;
+using TodoAPI.Repository;
 
-namespace Todo.API.Controllers;
+namespace TodoAPI.Controllers;
 
 public enum DeleteStatus
 {

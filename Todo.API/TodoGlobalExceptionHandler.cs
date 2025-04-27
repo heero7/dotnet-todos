@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 
-namespace Todo.API;
+namespace TodoAPI;
 
 public class TodoGlobalExceptionHandler(
     IHostEnvironment environment, 

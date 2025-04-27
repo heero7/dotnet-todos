@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Todo.API.Controllers;
-using Todo.API.Models;
+using TodoAPI.Controllers;
+using TodoAPI.Models;
 
-namespace Todo.API.Repository;
+namespace TodoAPI.Repository;
 
 public enum DeleteOperationStatus
 {
@@ -13,23 +13,23 @@ public enum DeleteOperationStatus
 
 public interface ITodoPersistence
 {
-    public Task<Models.Todo> Create(CreateTodo createTodo);
-    public Task<List<Models.Todo>> GetAll();
-    public Task<Models.Todo> GetById(Guid id);
-    public Task<Models.Todo> Update(UpdateTodo updateTodo);
+    public Task<Todo> Create(CreateTodo createTodo);
+    public Task<List<Todo>> GetAll();
+    public Task<Todo> GetById(Guid id);
+    public Task<Todo> Update(UpdateTodo updateTodo);
     public Task<DeleteOperationStatus> SoftDeleteById(Guid id);
     public Task<DeleteOperationStatus> SoftDeleteAll();
-    public Task<Models.Todo> DeleteById(Guid id);
+    public Task<Todo> DeleteById(Guid id);
     public Task DeleteAll();
 }
 
-public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoContext> logger) 
+public class TodoDbContext(DbContextOptions<TodoDbContext> options, ILogger<TodoDbContext> logger) 
     : DbContext(options), ITodoPersistence
 {
     private readonly ILogger _logger = logger;
-    public DbSet<Models.Todo> Todos { get; set; }
+    public DbSet<Todo> Todos { get; set; }
     
-    public async Task<Models.Todo> Create(CreateTodo createTodo)
+    public async Task<Todo> Create(CreateTodo createTodo)
     {
         var previousTodo = await Todos.FirstOrDefaultAsync(t => t.Name == createTodo.Name);
         if (previousTodo != null)
@@ -38,7 +38,7 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
             return null;
         }
         
-        var todo = new Models.Todo
+        var todo = new Todo
         {
             Id = Guid.NewGuid(),
             Name = createTodo.Name,
@@ -53,26 +53,26 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
         return todo;
     }
 
-    public Task<List<Models.Todo>> GetAll()
+    public Task<List<Todo>> GetAll()
     {
         return Todos
             .Where(todo => todo.DeletedAt == null)
             .ToListAsync();
     }
 
-    public async Task<Models.Todo> GetById(Guid id)
+    public async Task<Todo> GetById(Guid id)
     {
         var todo = await Todos.FirstOrDefaultAsync(t => t.Id == id);
         if (todo == null)
         {
             _logger.LogError("Getting Todo with ID: {id} was null." +
-                              $"The todo will be null", id);
+                              "The todo will be null", id);
         }
         
         return todo;
     }
 
-    public async Task<Models.Todo> Update(UpdateTodo updateTodo)
+    public async Task<Todo> Update(UpdateTodo updateTodo)
     {
         var existingTodo = await Todos
             .FirstOrDefaultAsync(t => t.Id == updateTodo.Id);
@@ -147,7 +147,7 @@ public class TodoContext(DbContextOptions<TodoContext> options, ILogger<TodoCont
     }
 
     //todo: change to a bool, use save change async > 0 
-    public async Task<Models.Todo> DeleteById(Guid id)
+    public async Task<Todo> DeleteById(Guid id)
     {
         var todo = await Todos
             .FirstOrDefaultAsync(t => t.Id == id);

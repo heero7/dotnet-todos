@@ -1,6 +1,6 @@
-using Todo.API.Controllers;
+using TodoAPI.Controllers;
 
-namespace Todo.API.Models;
+namespace TodoAPI.Models;
 
 public class CreateTodo
 {

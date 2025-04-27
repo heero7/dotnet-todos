@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using Todo.API;
-using Todo.API.Controllers;
-using Todo.API.Repository;
+using TodoAPI;
+using TodoAPI.Controllers;
+using TodoAPI.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,10 +41,10 @@ builder.Services.AddSwaggerGen();
 // Setup databases.
     // todo: this should be abstracted!
     // how can we abstract the details here, this is directly tied to Entity Framework
-builder.Services.AddDbContext<TodoContext>(opt => opt.UseInMemoryDatabase("TodoList"));
+builder.Services.AddDbContext<TodoDbContext>(opt => opt.UseInMemoryDatabase("TodoList"));
 builder.Services.AddScoped<ITodoService, TodoService>();
 builder.Services.AddScoped<ITodoRepository, TodoRepository>();
-builder.Services.AddScoped<ITodoPersistence, TodoContext>();
+builder.Services.AddScoped<ITodoPersistence, TodoDbContext>();
 
 builder.Services.AddProblemDetails();
 
