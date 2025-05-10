@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace User.API;
+namespace UserAPI;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -10,36 +9,18 @@ public class UserController(IUserService userService, ILogger<UserController> lo
    private readonly ILogger _logger = logger;
 
    [HttpPost("signup")]
-   public async Task<ActionResult> Post([FromBody] CreateUserRequest createUserRequest)
+   public async Task<ActionResult> SignUp([FromBody] CreateUserRequest createUserRequest)
    {
       return Ok();
    }
-   
+
+   [HttpPost("signin")]
+   public async Task<ActionResult> SignIn([FromBody] UserSignInRequest userSignInRequest)
+   {
+      return Ok();
+   }
 }
 
-public class CreateUserRequest
+public class UserSignInRequest
 {
-}
-
-public class UserService : IUserService
-{
-    
-}
-
-public interface IUserService
-{
-}
-
-public class UserRepository : IUserRepository
-{
-    
-}
-
-public interface IUserRepository
-{
-}
-
-public class UserDbContext : DbContext, IUserRepository
-{
-    
 }
